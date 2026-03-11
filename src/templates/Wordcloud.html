@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nuage de mots — SD2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --border:  #21262d;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --accent:  #58a6ff;
+      --amber:   #d29922;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Georgia", serif;
+      min-height: 100vh;
+      padding: 0 1.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%; max-width: 960px;
+      padding: 2.5rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: baseline; gap: 1.2rem;
+      animation: fadeDown .4s ease both;
+    }
+    header h1 { font-size: 1.8rem; font-weight: normal; letter-spacing: -.02em; }
+
+    .back { font-family: "Courier New", monospace; font-size: .72rem;
+      letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .back:hover { color: var(--accent); }
+
+    .subtitle {
+      width: 100%; max-width: 960px;
+      margin-top: 1rem;
+      font-size: .88rem;
+      color: var(--muted);
+      font-style: italic;
+      animation: fadeUp .4s .1s ease both;
+    }
+
+    /* ── Conteneur SVG ── */
+    .cloud-wrap {
+      width: 100%; max-width: 960px;
+      margin-top: 1.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      overflow: hidden;
+      animation: fadeUp .4s .2s ease both;
+    }
+
+    /* Le SVG généré côté serveur remplit le conteneur */
+    .cloud-wrap svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+
+    .empty {
+      width: 100%; max-width: 960px;
+      margin-top: 3rem;
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(8px);   } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Nuage de mots</h1>
+  <a class="back" href="/">← Accueil</a>
+</header>
+
+<p class="subtitle">Mots les plus fréquents dans les titres des articles stockés en base.</p>
+
+{% if svg %}
+<div class="cloud-wrap">
+  {{ svg | safe }}
+</div>
+{% else %}
+<p class="empty">Aucun article trouvé dans la base de données.</p>
+{% endif %}
+
+</body>
+</html>

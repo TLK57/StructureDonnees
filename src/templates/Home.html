@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SD2026 — Veille automatique</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:       #0d1117;
+            --surface:  #161b22;
+            --border:   #21262d;
+            --text:     #e6edf3;
+            --muted:    #8b949e;
+            --accent:   #58a6ff;
+            --accent2:  #3fb950;
+            --accent3:  #d29922;
+            --accent4:  #f78166;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Georgia", "Times New Roman", serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 1.5rem 5rem;
+        }
+
+        /* ── Header ── */
+        header {
+            width: 100%;
+            max-width: 860px;
+            padding: 3.5rem 0 2rem;
+            border-bottom: 1px solid var(--border);
+            animation: fadeDown .5s ease both;
+        }
+
+        .eyebrow {
+            font-family: "Courier New", monospace;
+            font-size: .72rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: .9rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: normal;
+            line-height: 1.15;
+            letter-spacing: -.02em;
+            color: var(--text);
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .subtitle {
+            margin-top: 1rem;
+            font-size: 1.05rem;
+            color: var(--muted);
+            max-width: 540px;
+            line-height: 1.65;
+            font-style: italic;
+        }
+
+        /* ── Navigation cards ── */
+        .section-title {
+            width: 100%;
+            max-width: 860px;
+            margin-top: 3rem;
+            font-family: "Courier New", monospace;
+            font-size: .68rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--border);
+            animation: fadeUp .4s .1s ease both;
+        }
+
+        .cards {
+            width: 100%;
+            max-width: 860px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .card {
+            display: block;
+            text-decoration: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem 1.6rem;
+            transition: border-color .2s, transform .2s;
+            animation: fadeUp .4s ease both;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        .card:nth-child(1) { animation-delay: .15s; }
+        .card:nth-child(2) { animation-delay: .25s; }
+        .card:nth-child(3) { animation-delay: .35s; }
+
+        .card-icon {
+            font-size: 1.5rem;
+            margin-bottom: .8rem;
+        }
+
+        .card-title {
+            font-family: "Courier New", monospace;
+            font-size: .95rem;
+            color: var(--text);
+            margin-bottom: .4rem;
+        }
+
+        .card-desc {
+            font-size: .88rem;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .card:nth-child(1) .card-title { color: var(--accent);  }
+        .card:nth-child(2) .card-title { color: var(--accent2); }
+        .card:nth-child(3) .card-title { color: var(--accent3); }
+
+        /* ── Features ── */
+        .features {
+            width: 100%;
+            max-width: 860px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: .75rem;
+            margin-top: 1.2rem;
+        }
+
+        .feat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent4);
+            border-radius: 4px;
+            padding: 1rem 1.1rem;
+            animation: fadeUp .4s ease both;
+        }
+
+        .feat:nth-child(1) { animation-delay: .2s; border-left-color: var(--accent);  }
+        .feat:nth-child(2) { animation-delay: .3s; border-left-color: var(--accent2); }
+        .feat:nth-child(3) { animation-delay: .4s; border-left-color: var(--accent3); }
+        .feat:nth-child(4) { animation-delay: .5s; border-left-color: var(--accent4); }
+
+        .feat-title {
+            font-family: "Courier New", monospace;
+            font-size: .78rem;
+            letter-spacing: .06em;
+            color: var(--text);
+            margin-bottom: .35rem;
+        }
+
+        .feat-desc {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* ── Footer ── */
+        footer {
+            margin-top: 4rem;
+            font-family: "Courier New", monospace;
+            font-size: .68rem;
+            color: var(--muted);
+            letter-spacing: .08em;
+            text-align: center;
+            animation: fadeUp .4s .6s ease both;
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <p class="eyebrow">Projet SD2026 · Flask + MongoDB</p>
+    <h1>Veille<br><span>automatique</span><br>d'actualités</h1>
+    <p class="subtitle">
+        Agrégation, stockage et exploration d'articles de presse
+        à partir de sitemaps XML — alimenté par Python, Flask et MongoDB.
+    </p>
+</header>
+
+<!-- Navigation principale -->
+<p class="section-title">Accès rapide</p>
+<div class="cards">
+
+    <a class="card" href="/articles">
+        <div class="card-icon">📰</div>
+        <div class="card-title">/articles</div>
+        <div class="card-desc">
+            Consulter et rechercher les articles importés par source, mot-clé ou date.
+        </div>
+    </a>
+
+    <a class="card" href="/subscriptions">
+        <div class="card-icon">🔔</div>
+        <div class="card-title">/subscriptions</div>
+        <div class="card-desc">
+            Gérer les abonnements aux sitemaps : ajout, suppression, activation, intervalles.
+        </div>
+    </a>
+
+    <a class="card" href="/wordcloud">
+        <div class="card-icon">☁</div>
+        <div class="card-title">/wordcloud</div>
+        <div class="card-desc">
+            Visualiser les mots les plus fréquents dans les titres des articles sous forme de nuage SVG.
+        </div>
+    </a>
+
+</div>
+
+<!-- Résumé fonctionnel -->
+<p class="section-title" style="margin-top:3rem;">Ce que fait l'application</p>
+<div class="features">
+
+    <div class="feat">
+        <div class="feat-title">Lecture de sitemaps</div>
+        <div class="feat-desc">Télécharge et analyse les sitemaps XML des sources configurées.</div>
+    </div>
+
+    <div class="feat">
+        <div class="feat-title">Stockage MongoDB</div>
+        <div class="feat-desc">Persiste les articles avec dédoublonnage automatique par URL.</div>
+    </div>
+
+    <div class="feat">
+        <div class="feat-title">Recherche d'articles</div>
+        <div class="feat-desc">Filtre par source, mot-clé dans le titre et date de publication.</div>
+    </div>
+
+    <div class="feat">
+        <div class="feat-title">Nuage de mots SVG</div>
+        <div class="feat-desc">Génère un nuage pondéré à partir des titres stockés en base.</div>
+    </div>
+
+</div>
+
+<footer>SD2026 · Python {{ python_version }} · Flask · MongoDB</footer>
+
+</body>
+</html>

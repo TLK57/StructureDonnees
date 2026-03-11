@@ -2,32 +2,235 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>Articles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Articles — SD2026</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
-        h1   { border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-        ul   { list-style: none; padding: 0; }
-        li   { border-bottom: 1px solid #eee; padding: 12px 0; }
-        .titre { font-size: 1rem; font-weight: bold; }
-        .meta  { font-size: 0.85rem; color: #666; margin-top: 4px; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #0d1117;
+            --surface: #161b22;
+            --border:  #21262d;
+            --text:    #e6edf3;
+            --muted:   #8b949e;
+            --accent:  #58a6ff;
+            --green:   #3fb950;
+            --red:     #f78166;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Georgia", serif;
+            min-height: 100vh;
+            padding: 0 1.5rem 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── Header ── */
+        header {
+            width: 100%; max-width: 820px;
+            padding: 2.5rem 0 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: baseline;
+            gap: 1.2rem;
+            animation: fadeDown .4s ease both;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: normal;
+            letter-spacing: -.02em;
+        }
+
+        .back {
+            font-family: "Courier New", monospace;
+            font-size: .72rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-decoration: none;
+        }
+        .back:hover { color: var(--accent); }
+
+        /* ── Formulaire ── */
+        .search-form {
+            width: 100%; max-width: 820px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.4rem 1.6rem;
+            margin-top: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            animation: fadeUp .4s .1s ease both;
+        }
+
+        .field { display: flex; flex-direction: column; gap: .4rem; }
+
+        label {
+            font-family: "Courier New", monospace;
+            font-size: .7rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        input[type="text"] {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            padding: .5rem .7rem;
+            font-size: .9rem;
+            font-family: "Georgia", serif;
+            outline: none;
+            transition: border-color .2s;
+        }
+        input[type="text"]:focus { border-color: var(--accent); }
+
+        .form-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: .7rem;
+        }
+
+        .btn-search {
+            background: var(--accent);
+            color: #0d1117;
+            border: none;
+            border-radius: 4px;
+            padding: .5rem 1.1rem;
+            font-size: .85rem;
+            font-family: "Courier New", monospace;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-search:hover { background: #79b8ff; }
+
+        .btn-reset {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: .8rem;
+            white-space: nowrap;
+        }
+        .btn-reset:hover { color: var(--text); }
+
+        /* ── Compteur ── */
+        .count {
+            width: 100%; max-width: 820px;
+            margin-top: 1.5rem;
+            font-family: "Courier New", monospace;
+            font-size: .72rem;
+            letter-spacing: .1em;
+            color: var(--muted);
+            animation: fadeUp .4s .2s ease both;
+        }
+
+        /* ── Liste ── */
+        .list {
+            width: 100%; max-width: 820px;
+            margin-top: .8rem;
+            list-style: none;
+        }
+
+        .item {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            display: grid;
+            grid-template-columns: 1.6rem 1fr;
+            gap: .3rem 1rem;
+            animation: fadeUp .35s ease both;
+        }
+
+        .item:nth-child(n) { animation-delay: calc(n * .04s); }
+
+        .num {
+            color: var(--border);
+            font-family: "Courier New", monospace;
+            font-size: .7rem;
+            padding-top: .3rem;
+            text-align: right;
+        }
+
+        .item-body { display: flex; flex-direction: column; gap: .3rem; }
+
+        .item-title a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+        .item-title a:hover { color: var(--accent); }
+
+        .item-meta {
+            font-family: "Courier New", monospace;
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+        .empty {
+            width: 100%; max-width: 820px;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        @keyframes fadeDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeUp   { from { opacity:0; transform:translateY(8px);   } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
 
-<h1>Derniers articles</h1>
+<header>
+    <h1>Articles</h1>
+    <a class="back" href="/">← Accueil</a>
+</header>
+
+<form class="search-form" method="GET" action="/articles">
+    <div class="field">
+        <label>Source</label>
+        <input type="text" name="source_name" value="{{ source }}" placeholder="ex : Le Monde" />
+    </div>
+    <div class="field">
+        <label>Mot dans le titre</label>
+        <input type="text" name="keyword" value="{{ keyword }}" placeholder="ex : climat" />
+    </div>
+    <div class="field">
+        <label>Date</label>
+        <input type="text" name="publication_date" value="{{ date }}" placeholder="ex : 2026-03-10" />
+    </div>
+    <div class="form-actions">
+        <button class="btn-search" type="submit">Rechercher</button>
+        <a class="btn-reset" href="/articles">Réinitialiser</a>
+    </div>
+</form>
 
 {% if articles %}
-<p>{{ articles|length }} article(s) affichés</p>
-<ul>
+<p class="count">{{ articles|length }} article(s) trouvé(s)</p>
+<ul class="list">
     {% for article in articles %}
-    <li>
-        <div class="titre">{{ article.title }}</div>
-        <div class="meta">{{ article.publication_date }} · {{ article.source_name }}</div>
+    <li class="item">
+        <span class="num">{{ loop.index }}</span>
+        <div class="item-body">
+            <div class="item-title">
+                <a href="/article/{{ article._id }}/open" target="_blank">{{ article.title }}</a>
+            </div>
+            <div class="item-meta">
+                {{ article.publication_date | format_date }}
+                &nbsp;·&nbsp; {{ article.source_name }}
+            </div>
+        </div>
     </li>
     {% endfor %}
 </ul>
 {% else %}
-<p>Aucun article trouvé dans la base de données.</p>
+<p class="empty">Aucun article trouvé pour ces critères.</p>
 {% endif %}
 
 </body>
