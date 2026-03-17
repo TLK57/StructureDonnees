@@ -1,6 +1,4 @@
-# ============================================================
-# app.py - Application Flask avec dates converties en datetime
-# ============================================================
+# Application Flask avec dates converties en datetime
 
 # 1. Imports Flask
 from flask import Flask, render_template, request, redirect, abort
@@ -28,7 +26,7 @@ from BdMongo import articles, consultations, subscriptions
 # 6. Création de l'application Flask
 app = Flask(__name__)
 
-# 7. Filtre Jinja2 pour afficher publication_date quel que soit son type
+# 7. Filtre pour afficher publication_date quel que soit son type
 #    - datetime → "dd/mm/yyyy à HH:MM"
 #    - chaîne   → affichée telle quelle
 #    - None     → "Date inconnue"
@@ -62,7 +60,7 @@ NAMESPACES = {
 scheduler = BackgroundScheduler(timezone="UTC")
 
 
-# ── Conversion de date ────────────────────────────────────────
+# Conversion de date
 
 def convertir_date(date_str):
     """
@@ -182,7 +180,7 @@ def mettre_a_jour_tous_les_abonnements():
             "doublons": total_doublons, "erreurs": erreurs}
 
 
-# ── Gestion des jobs APScheduler ──────────────────────────────
+# Gestion des jobs APScheduler
 
 def synchroniser_jobs():
     """Synchronise les jobs APScheduler avec la collection subscriptions."""
@@ -225,7 +223,7 @@ def demarrer_scheduler():
     atexit.register(lambda: scheduler.shutdown(wait=False))
 
 
-# ── Routes ────────────────────────────────────────────────────
+# Routes
 
 @app.route("/")
 def index():
@@ -234,7 +232,7 @@ def index():
     return render_template("home.html", python_version=python_version)
 
 
-# ── Articles ──────────────────────────────────────────────────
+# Articles
 
 @app.route("/articles")
 def liste_articles():
@@ -283,7 +281,7 @@ def ouvrir_article(id):
     return redirect(article["url"])
 
 
-# ── Nuage de mots ─────────────────────────────────────────────
+# Nuage de mots
 
 def generer_svg(titres):
     texte = " ".join(titres).lower()
@@ -330,7 +328,7 @@ def nuage_de_mots():
     return render_template("wordcloud.html", svg=svg)
 
 
-# ── Abonnements ───────────────────────────────────────────────
+# Abonnements
 
 @app.route("/subscriptions")
 def liste_subscriptions():
@@ -412,7 +410,7 @@ def mettre_a_jour():
     return render_template("subscriptions.html", subscriptions=liste, erreur=None, resume=resume)
 
 
-# ── Lancement ─────────────────────────────────────────────────
+# Lancement
 
 if __name__ == "__main__":
     demarrer_scheduler()

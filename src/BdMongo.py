@@ -1,6 +1,4 @@
-# ============================================================
-# BdMongo.py - Connexion à la base de données MongoDB
-# ============================================================
+#Connexion à la base de données MongoDB
 
 # 1. Import du client MongoDB depuis pymongo
 from pymongo import MongoClient
@@ -16,8 +14,6 @@ subscriptions  = db["subscriptions"]
 articles       = db["articles"]
 consultations  = db["consultations"]
 
-# 5. Test optionnel : à lancer directement avec "python BdMongo.py"
-#    Ce bloc ne s'exécute pas quand BdMongo.py est importé ailleurs
 if __name__ == "__main__":
     try:
         # Vérifie que le serveur MongoDB répond

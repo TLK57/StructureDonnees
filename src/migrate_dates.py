@@ -1,8 +1,4 @@
-# ============================================================
-# migrate_dates.py - Migration des publication_date texte → datetime
-# ============================================================
-# À lancer une seule fois, en dehors de app.py.
-# Usage : python migrate_dates.py
+#Migration des publication_date texte → datetime
 
 from datetime import datetime, timezone
 from BdMongo import articles

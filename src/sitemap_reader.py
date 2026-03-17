@@ -1,6 +1,4 @@
-# ============================================================
-# sitemap_reader.py - Lecture d'un sitemap XML depuis une URL
-# ============================================================
+#Lecture d'un sitemap XML depuis une URL
 
 # 1. Imports nécessaires
 import requests                        # pour télécharger le sitemap
@@ -10,8 +8,6 @@ import xml.etree.ElementTree as ET    # pour analyser le XML
 SITEMAP_URL = "https://www.lemonde.fr/sitemap_news.xml"
 
 # 3. Déclaration des namespaces XML
-#    Le sitemap utilise des préfixes comme "news:" et "xmlns"
-#    Il faut les déclarer pour que ElementTree les reconnaisse
 NAMESPACES = {
     "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9",
     "news":    "http://www.google.com/schemas/sitemap-news/0.9",

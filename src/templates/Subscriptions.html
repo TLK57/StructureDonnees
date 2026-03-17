@@ -43,7 +43,6 @@
             letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
         .back:hover { color: var(--accent); }
 
-        /* ── Section label ── */
         .section-label {
             width: 100%; max-width: 920px;
             margin-top: 2rem;
@@ -54,7 +53,6 @@
             animation: fadeUp .4s ease both;
         }
 
-        /* ── Alertes ── */
         .alert {
             width: 100%; max-width: 920px;
             margin-top: 1rem;
@@ -70,7 +68,6 @@
         .alert-resume li { font-size: .85rem; margin-top: .2rem; }
         .alert-resume .err-item { color: var(--red); }
 
-        /* ── Bouton mise à jour ── */
         .update-zone {
             width: 100%; max-width: 920px;
             margin-top: 1.2rem;
@@ -87,7 +84,6 @@
         .btn-update:hover { background: #79b8ff; }
         .update-hint { margin-top: .5rem; font-size: .78rem; color: var(--muted); }
 
-        /* ── Formulaire d'ajout ── */
         .add-form {
             width: 100%; max-width: 920px;
             background: var(--surface);
@@ -209,7 +205,6 @@
     <a class="back" href="/">← Accueil</a>
 </header>
 
-<!-- Résumé mise à jour -->
 {% if resume %}
 <div class="alert alert-resume">
     <strong>Mise à jour terminée</strong>
@@ -226,7 +221,6 @@
 <div class="alert alert-error">{{ erreur }}</div>
 {% endif %}
 
-<!-- Mise à jour manuelle -->
 <p class="section-label">Mise à jour</p>
 <div class="update-zone">
     <form method="POST" action="/subscriptions/update">
@@ -235,7 +229,6 @@
     <p class="update-hint">Lance la lecture des sitemaps et insère les nouveaux articles.</p>
 </div>
 
-<!-- Formulaire d'ajout -->
 <p class="section-label">Ajouter un abonnement</p>
 <form class="add-form" method="POST" action="/subscriptions/add">
     <div class="field">
@@ -255,7 +248,6 @@
     </div>
 </form>
 
-<!-- Liste -->
 <p class="section-label">Abonnements existants ({{ subscriptions|length }})</p>
 
 {% if subscriptions %}

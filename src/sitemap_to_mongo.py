@@ -1,6 +1,5 @@
-# ============================================================
-# sitemap_to_mongo.py - Lecture du sitemap et insertion dans MongoDB
-# ============================================================
+#Lecture du sitemap et insertion dans MongoDB
+
 
 # 1. Imports nécessaires
 import requests
