@@ -283,50 +283,110 @@ def ouvrir_article(id):
 
 # Nuage de mots
 
-def generer_svg(titres):
+def generer_svg(titres, nb_mots=50):
     texte = " ".join(titres).lower()
-    mots  = re.findall(r"[a-zàâäéèêëîïôùûüç]{3,}", texte)
+    mots = re.findall(r"[a-zàâäéèêëîïôùûüç]{3,}", texte)
     mots_filtres = [m for m in mots if m not in STOPWORDS_FR]
-    frequences   = Counter(mots_filtres).most_common(50)
+
+    frequences = Counter(mots_filtres).most_common(nb_mots)
     if not frequences:
         return None
+
     freq_max = frequences[0][1]
     freq_min = frequences[-1][1]
+
     def taille(freq):
         if freq_max == freq_min:
             return 32
         return int(14 + (freq - freq_min) / (freq_max - freq_min) * 46)
+
     couleurs = ["#58a6ff", "#3fb950", "#d29922", "#f78166", "#79b8ff", "#56d364", "#e3b341", "#ffa198"]
     LARGEUR, HAUTEUR, MARGE = 900, 520, 10
     random.seed(42)
     boites = []
+
     def chevauche(x, y, w, h):
-        x1, y1, x2, y2 = x-w/2-6, y-h-6, x+w/2+6, y+6
-        return any(x1 < bx2 and x2 > bx1 and y1 < by2 and y2 > by1 for bx1,by1,bx2,by2 in boites)
+        x1, y1, x2, y2 = x - w/2 - 6, y - h - 6, x + w/2 + 6, y + 6
+        return any(x1 < bx2 and x2 > bx1 and y1 < by2 and y2 > by1 for bx1, by1, bx2, by2 in boites)
+
     def hors_cadre(x, y, w, h):
-        return x-w/2 < MARGE or x+w/2 > LARGEUR-MARGE or y-h < MARGE or y > HAUTEUR-MARGE
+        return x - w/2 < MARGE or x + w/2 > LARGEUR - MARGE or y - h < MARGE or y > HAUTEUR - MARGE
+
     elements = []
+
     for mot, freq in frequences:
         px = taille(freq)
-        w_mot, h_mot = len(mot)*px*0.6, px
+        w_mot, h_mot = len(mot) * px * 0.6, px
         couleur = random.choice(couleurs)
+
         for _ in range(200):
-            x = random.randint(int(w_mot/2)+MARGE, int(LARGEUR-w_mot/2)-MARGE)
-            y = random.randint(h_mot+MARGE, HAUTEUR-MARGE)
+            x = random.randint(int(w_mot / 2) + MARGE, int(LARGEUR - w_mot / 2) - MARGE)
+            y = random.randint(h_mot + MARGE, HAUTEUR - MARGE)
+
             if not chevauche(x, y, w_mot, h_mot) and not hors_cadre(x, y, w_mot, h_mot):
-                boites.append((x-w_mot/2, y-h_mot, x+w_mot/2, y))
-                elements.append(f'<text x="{x}" y="{y}" font-size="{px}" fill="{couleur}" font-family="Arial, sans-serif" text-anchor="middle">{mot}</text>')
+                boites.append((x - w_mot/2, y - h_mot, x + w_mot/2, y))
+                elements.append(
+                    f'<text x="{x}" y="{y}" font-size="{px}" fill="{couleur}" '
+                    f'font-family="Arial, sans-serif" text-anchor="middle">{mot}</text>'
+                )
                 break
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{LARGEUR}" height="{HAUTEUR}" style="background:#161b22;">'
-            + "".join(elements) + "</svg>")
+
+    return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{LARGEUR}" height="{HAUTEUR}" style="background:#161b22;">'
+            + "".join(elements)
+            + "</svg>"
+    )
 
 
 @app.route("/wordcloud")
 def nuage_de_mots():
-    titres = [a["title"] for a in articles.find({}, {"title": 1}) if a.get("title")]
-    svg = generer_svg(titres) if titres else None
-    return render_template("wordcloud.html", svg=svg)
+    date_debut = request.args.get("date_debut", "").strip()
+    date_fin = request.args.get("date_fin", "").strip()
+    nb_mots = request.args.get("nb_mots", "30").strip()
 
+    erreur = None
+    filtre = {}
+
+    try:
+        nb_mots = int(nb_mots)
+        if nb_mots < 1:
+            nb_mots = 30
+    except ValueError:
+        nb_mots = 30
+
+    try:
+        if date_debut:
+            debut_dt = datetime.strptime(date_debut, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            filtre["publication_date"] = filtre.get("publication_date", {})
+            filtre["publication_date"]["$gte"] = debut_dt
+
+        if date_fin:
+            fin_dt = datetime.strptime(date_fin, "%Y-%m-%d").replace(
+                hour=23, minute=59, second=59, tzinfo=timezone.utc
+            )
+            filtre["publication_date"] = filtre.get("publication_date", {})
+            filtre["publication_date"]["$lte"] = fin_dt
+
+        if date_debut and date_fin:
+            debut_test = datetime.strptime(date_debut, "%Y-%m-%d")
+            fin_test = datetime.strptime(date_fin, "%Y-%m-%d")
+            if debut_test > fin_test:
+                erreur = "La date de début doit être antérieure ou égale à la date de fin."
+                return render_template("wordcloud.html", svg=None, erreur=erreur)
+
+    except ValueError:
+        erreur = "Format de date invalide."
+        return render_template("wordcloud.html", svg=None, erreur=erreur)
+
+    titres = [
+        a["title"]
+        for a in articles.find(filtre, {"title": 1})
+        if a.get("title")
+    ]
+
+    svg = generer_svg(titres, nb_mots=nb_mots) if titres else None
+
+    return render_template("wordcloud.html", svg=svg, erreur=erreur)
 
 # Abonnements
 

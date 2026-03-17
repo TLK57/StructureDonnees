@@ -29,20 +29,36 @@
     }
 
     header {
-      width: 100%; max-width: 960px;
+      width: 100%;
+      max-width: 960px;
       padding: 2.5rem 0 1.5rem;
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: baseline; gap: 1.2rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1.2rem;
       animation: fadeDown .4s ease both;
     }
-    header h1 { font-size: 1.8rem; font-weight: normal; letter-spacing: -.02em; }
 
-    .back { font-family: "Courier New", monospace; font-size: .72rem;
-      letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: normal;
+      letter-spacing: -.02em;
+    }
+
+    .back {
+      font-family: "Courier New", monospace;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
     .back:hover { color: var(--accent); }
 
     .subtitle {
-      width: 100%; max-width: 960px;
+      width: 100%;
+      max-width: 960px;
       margin-top: 1rem;
       font-size: .88rem;
       color: var(--muted);
@@ -50,9 +66,74 @@
       animation: fadeUp .4s .1s ease both;
     }
 
-    /* ── Conteneur SVG ── */
+    .filters {
+      width: 100%;
+      max-width: 960px;
+      margin-top: 1.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      animation: fadeUp .4s .15s ease both;
+    }
+
+    .filters form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+    }
+
+    .field label {
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select {
+      background: #0f141b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .75rem .9rem;
+      border-radius: 6px;
+      font-size: .95rem;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent);
+    }
+
+    .actions {
+      display: flex;
+      align-items: end;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 6px;
+      padding: .8rem 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity .2s ease;
+    }
+
+    .btn:hover {
+      opacity: .9;
+    }
+
     .cloud-wrap {
-      width: 100%; max-width: 960px;
+      width: 100%;
+      max-width: 960px;
       margin-top: 1.8rem;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -62,7 +143,6 @@
       animation: fadeUp .4s .2s ease both;
     }
 
-    /* Le SVG généré côté serveur remplit le conteneur */
     .cloud-wrap svg {
       display: block;
       width: 100%;
@@ -71,15 +151,34 @@
     }
 
     .empty {
-      width: 100%; max-width: 960px;
+      width: 100%;
+      max-width: 960px;
       margin-top: 3rem;
       text-align: center;
       color: var(--muted);
       font-style: italic;
     }
 
-    @keyframes fadeDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fadeUp   { from { opacity:0; transform:translateY(8px);   } to { opacity:1; transform:translateY(0); } }
+    .error {
+      width: 100%;
+      max-width: 960px;
+      margin-top: 1rem;
+      padding: .9rem 1rem;
+      background: rgba(210, 153, 34, 0.12);
+      border: 1px solid var(--amber);
+      border-radius: 6px;
+      color: #f2cc60;
+    }
+
+    @keyframes fadeDown {
+      from { opacity:0; transform:translateY(-10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -89,14 +188,59 @@
   <a class="back" href="/">← Accueil</a>
 </header>
 
-<p class="subtitle">Mots les plus fréquents dans les titres des articles stockés en base.</p>
+<p class="subtitle">
+  Mots les plus fréquents dans les titres des articles stockés en base.
+</p>
+
+<div class="filters">
+  <form method="GET" action="/wordcloud">
+    <div class="field">
+      <label for="date_debut">Date début</label>
+      <input
+              type="date"
+              id="date_debut"
+              name="date_debut"
+              value="{{ request.args.get('date_debut', '') }}"
+      >
+    </div>
+
+    <div class="field">
+      <label for="date_fin">Date fin</label>
+      <input
+              type="date"
+              id="date_fin"
+              name="date_fin"
+              value="{{ request.args.get('date_fin', '') }}"
+      >
+    </div>
+
+    <div class="field">
+      <label for="nb_mots">Nombre de mots</label>
+      <select id="nb_mots" name="nb_mots">
+        <option value="10" {% if request.args.get('nb_mots') == '10' %}selected{% endif %}>10</option>
+        <option value="20" {% if request.args.get('nb_mots') == '20' %}selected{% endif %}>20</option>
+        <option value="30" {% if request.args.get('nb_mots', '30') == '30' %}selected{% endif %}>30</option>
+        <option value="50" {% if request.args.get('nb_mots') == '50' %}selected{% endif %}>50</option>
+        <option value="100" {% if request.args.get('nb_mots') == '100' %}selected{% endif %}>100</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button class="btn" type="submit">Générer</button>
+    </div>
+  </form>
+</div>
+
+{% if erreur %}
+<div class="error">{{ erreur }}</div>
+{% endif %}
 
 {% if svg %}
 <div class="cloud-wrap">
   {{ svg | safe }}
 </div>
 {% else %}
-<p class="empty">Aucun article trouvé dans la base de données.</p>
+<p class="empty">Aucun article trouvé pour les critères sélectionnés.</p>
 {% endif %}
 
 </body>
