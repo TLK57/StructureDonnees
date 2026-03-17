@@ -1,4 +1,4 @@
-# Application Flask avec dates converties en datetime
+# app.py - Application Flask
 
 # 1. Imports Flask
 from flask import Flask, render_template, request, redirect, abort
@@ -36,7 +36,7 @@ def format_date(valeur):
         return "Date inconnue"
     if isinstance(valeur, datetime):
         return valeur.strftime("%d/%m/%Y à %H:%M")
-    return str(valeur)  # chaîne texte brute
+    return str(valeur)
 
 
 # 8. Stopwords français de base
@@ -50,15 +50,14 @@ STOPWORDS_FR = {
     "être", "face", "ans"
 }
 
-# 8. Namespaces XML pour les sitemaps
+# 9. Namespaces XML pour les sitemaps
 NAMESPACES = {
     "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9",
-    "news":    "http://www.google.com/schemas/sitemap-news/0.9",
+    "news": "http://www.google.com/schemas/sitemap-news/0.9",
 }
 
-# 9. Instance globale du scheduler
+# 10. Instance globale du scheduler
 scheduler = BackgroundScheduler(timezone="UTC")
-
 
 # Conversion de date
 
@@ -71,7 +70,6 @@ def convertir_date(date_str):
     if not date_str:
         return None
 
-    # Formats courants rencontrés dans les sitemaps
     formats = [
         "%Y-%m-%dT%H:%M:%S%z",   # 2026-03-10T14:32:00+02:00
         "%Y-%m-%dT%H:%M:%SZ",    # 2026-03-10T14:32:00Z
@@ -82,59 +80,116 @@ def convertir_date(date_str):
     for fmt in formats:
         try:
             dt = datetime.strptime(date_str.strip(), fmt)
-            # Si pas de timezone, on suppose UTC
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
-            # Convertit tout en UTC pour la cohérence
             return dt.astimezone(timezone.utc)
         except ValueError:
             continue
 
-    # Aucun format n'a fonctionné
     return None
 
-
-# ── Fonctions métier ──────────────────────────────────────────
+# Fonctions métier
 
 def lire_sitemap(url):
     """Télécharge et parse un sitemap. Retourne une liste de dictionnaires."""
     response = requests.get(url, timeout=10)
     response.raise_for_status()
+
     root = ET.fromstring(response.content)
     resultats = []
+
     for url_tag in root.findall("sitemap:url", NAMESPACES):
-        loc              = url_tag.findtext("sitemap:loc",                     default="", namespaces=NAMESPACES)
-        title            = url_tag.findtext("news:news/news:title",            default="", namespaces=NAMESPACES)
-        publication_date = url_tag.findtext("news:news/news:publication_date", default="", namespaces=NAMESPACES)
-        resultats.append({"loc": loc, "title": title, "publication_date": publication_date})
+        loc = url_tag.findtext("sitemap:loc", default="", namespaces=NAMESPACES)
+        title = url_tag.findtext("news:news/news:title", default="", namespaces=NAMESPACES)
+        publication_date = url_tag.findtext(
+            "news:news/news:publication_date",
+            default="",
+            namespaces=NAMESPACES
+        )
+        resultats.append({
+            "loc": loc,
+            "title": title,
+            "publication_date": publication_date
+        })
+
     return resultats
 
+
+def recuperer_image_article(url):
+    """
+    Essaie de récupérer l'image principale d'un article via les balises meta.
+    Retourne None si rien n'est trouvé.
+    """
+    try:
+        response = requests.get(
+            url,
+            timeout=10,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        response.raise_for_status()
+        html = response.text
+
+        patterns = [
+            r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+            r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                return match.group(1)
+
+    except Exception as e:
+        print(f"[Image] Erreur pour {url} : {e}")
+
+    return None
 
 def inserer_articles(liste, subscription_id, source_name):
     """
     Insère les articles dans MongoDB.
     publication_date est converti en datetime avant insertion.
+    Si l'article existe déjà, essaie de compléter image_url si elle manque.
     Retourne (nb_insérés, nb_doublons).
     """
-    nb_inseres  = 0
+    nb_inseres = 0
     nb_doublons = 0
+
     for item in liste:
+        url_article = item["loc"]
+        image_url = recuperer_image_article(url_article)
+
+        document = {
+            "subscription_id": subscription_id,
+            "source_name": source_name,
+            "url": url_article,
+            "title": item["title"],
+            "publication_date": convertir_date(item["publication_date"]),
+            "image_url": image_url,
+            "fetched_at": datetime.now(timezone.utc),
+            "consultations_count": 0,
+        }
+
         try:
-            articles.insert_one({
-                "subscription_id":     subscription_id,
-                "source_name":         source_name,
-                "url":                 item["loc"],
-                "title":               item["title"],
-                # Conversion de la chaîne ISO en vrai datetime UTC
-                "publication_date":    convertir_date(item["publication_date"]),
-                "fetched_at":          datetime.now(timezone.utc),
-                "consultations_count": 0,
-            })
+            articles.insert_one(document)
             nb_inseres += 1
+
         except DuplicateKeyError:
             nb_doublons += 1
-    return nb_inseres, nb_doublons
 
+            article_existant = articles.find_one(
+                {"url": url_article},
+                {"image_url": 1}
+            )
+
+            if article_existant and not article_existant.get("image_url") and image_url:
+                articles.update_one(
+                    {"url": url_article},
+                    {"$set": {"image_url": image_url}}
+                )
+
+    return nb_inseres, nb_doublons
 
 def mettre_a_jour_un_abonnement(subscription_id_str):
     """Met à jour un seul abonnement. Appelé par chaque job APScheduler."""
@@ -143,13 +198,17 @@ def mettre_a_jour_un_abonnement(subscription_id_str):
         sub = subscriptions.find_one({"_id": oid, "active": True})
         if sub is None:
             return
+
         liste = lire_sitemap(sub["sitemap_url"])
         inseres, doublons = inserer_articles(liste, sub["_id"], sub["source_name"])
+
         subscriptions.update_one(
             {"_id": sub["_id"]},
             {"$set": {"last_fetch_at": datetime.now(timezone.utc)}}
         )
+
         print(f"[Scheduler] {sub['source_name']} : {inseres} insérés, {doublons} doublons.")
+
     except Exception as e:
         print(f"[Scheduler] Erreur pour {subscription_id_str} : {e}")
 
@@ -157,28 +216,33 @@ def mettre_a_jour_un_abonnement(subscription_id_str):
 def mettre_a_jour_tous_les_abonnements():
     """Utilisée par le bouton manuel. Met à jour tous les abonnements actifs."""
     abonnements_actifs = list(subscriptions.find({"active": True}))
-    total_inseres  = 0
+    total_inseres = 0
     total_doublons = 0
-    total_traites  = 0
-    erreurs        = []
+    total_traites = 0
+    erreurs = []
 
     for sub in abonnements_actifs:
         total_traites += 1
         try:
             liste = lire_sitemap(sub["sitemap_url"])
             inseres, doublons = inserer_articles(liste, sub["_id"], sub["source_name"])
-            total_inseres  += inseres
+            total_inseres += inseres
             total_doublons += doublons
+
             subscriptions.update_one(
                 {"_id": sub["_id"]},
                 {"$set": {"last_fetch_at": datetime.now(timezone.utc)}}
             )
+
         except Exception as e:
             erreurs.append(f"{sub['source_name']} : {str(e)}")
 
-    return {"traites": total_traites, "inseres": total_inseres,
-            "doublons": total_doublons, "erreurs": erreurs}
-
+    return {
+        "traites": total_traites,
+        "inseres": total_inseres,
+        "doublons": total_doublons,
+        "erreurs": erreurs
+    }
 
 # Gestion des jobs APScheduler
 
@@ -193,10 +257,10 @@ def synchroniser_jobs():
             print(f"[Scheduler] Job supprimé : {job.id}")
 
     for sub in abonnements_actifs:
-        job_id     = f"sub_{str(sub['_id'])}"
-        minutes    = sub.get("refresh_interval_minutes", 60)
+        job_id = f"sub_{str(sub['_id'])}"
+        minutes = sub.get("refresh_interval_minutes", 60)
         sub_id_str = str(sub["_id"])
-        existing   = scheduler.get_job(job_id)
+        existing = scheduler.get_job(job_id)
 
         if existing is None:
             scheduler.add_job(
@@ -222,7 +286,6 @@ def demarrer_scheduler():
     print("Scheduler démarré.")
     atexit.register(lambda: scheduler.shutdown(wait=False))
 
-
 # Routes
 
 @app.route("/")
@@ -231,16 +294,17 @@ def index():
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     return render_template("home.html", python_version=python_version)
 
-
 # Articles
 
 @app.route("/articles")
 def liste_articles():
-    source  = request.args.get("source_name", "").strip()
+    source = request.args.get("source_name", "").strip()
     keyword = request.args.get("keyword", "").strip()
-    date    = request.args.get("publication_date", "").strip()
+    date_debut = request.args.get("date_debut", "").strip()
+    date_fin = request.args.get("date_fin", "").strip()
 
     filtre = {}
+    erreur = None
 
     if source:
         filtre["source_name"] = source
@@ -248,22 +312,44 @@ def liste_articles():
     if keyword:
         filtre["title"] = {"$regex": keyword, "$options": "i"}
 
-    if date:
-        # Convertit la date saisie en plage : du début au fin du jour
-        # Exemple : "2026-03-10" → entre 2026-03-10T00:00:00Z et 2026-03-10T23:59:59Z
-        debut_journee = convertir_date(date)
-        if debut_journee:
-            fin_journee = debut_journee + timedelta(days=1) - timedelta(seconds=1)
-            filtre["publication_date"] = {
-                "$gte": debut_journee,
-                "$lte": fin_journee,
-            }
+    try:
+        if date_debut:
+            debut_dt = datetime.strptime(date_debut, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            filtre["publication_date"] = filtre.get("publication_date", {})
+            filtre["publication_date"]["$gte"] = debut_dt
 
-    resultats = articles.find(filtre).sort("publication_date", -1).limit(20)
+        if date_fin:
+            fin_dt = datetime.strptime(date_fin, "%Y-%m-%d").replace(
+                hour=23, minute=59, second=59, tzinfo=timezone.utc
+            )
+            filtre["publication_date"] = filtre.get("publication_date", {})
+            filtre["publication_date"]["$lte"] = fin_dt
+
+        if date_debut and date_fin:
+            debut_test = datetime.strptime(date_debut, "%Y-%m-%d")
+            fin_test = datetime.strptime(date_fin, "%Y-%m-%d")
+            if debut_test > fin_test:
+                erreur = "La date de début doit être antérieure ou égale à la date de fin."
+
+    except ValueError:
+        erreur = "Format de date invalide."
+
+    if erreur:
+        resultats = []
+    else:
+        resultats = list(articles.find(filtre).sort("publication_date", -1).limit(20))
+
+    sources = sorted([s for s in articles.distinct("source_name") if s])
+
     return render_template(
         "articles.html",
-        articles=list(resultats),
-        source=source, keyword=keyword, date=date
+        articles=resultats,
+        sources=sources,
+        source=source,
+        keyword=keyword,
+        date_debut=date_debut,
+        date_fin=date_fin,
+        erreur=erreur
     )
 
 
@@ -273,11 +359,17 @@ def ouvrir_article(id):
         oid = ObjectId(id)
     except InvalidId:
         abort(404)
+
     article = articles.find_one({"_id": oid})
     if article is None:
         abort(404)
-    consultations.insert_one({"article_id": oid, "consulted_at": datetime.now(timezone.utc)})
+
+    consultations.insert_one({
+        "article_id": oid,
+        "consulted_at": datetime.now(timezone.utc)
+    })
     articles.update_one({"_id": oid}, {"$inc": {"consultations_count": 1}})
+
     return redirect(article["url"])
 
 
@@ -306,11 +398,11 @@ def generer_svg(titres, nb_mots=50):
     boites = []
 
     def chevauche(x, y, w, h):
-        x1, y1, x2, y2 = x - w/2 - 6, y - h - 6, x + w/2 + 6, y + 6
+        x1, y1, x2, y2 = x - w / 2 - 6, y - h - 6, x + w / 2 + 6, y + 6
         return any(x1 < bx2 and x2 > bx1 and y1 < by2 and y2 > by1 for bx1, by1, bx2, by2 in boites)
 
     def hors_cadre(x, y, w, h):
-        return x - w/2 < MARGE or x + w/2 > LARGEUR - MARGE or y - h < MARGE or y > HAUTEUR - MARGE
+        return x - w / 2 < MARGE or x + w / 2 > LARGEUR - MARGE or y - h < MARGE or y > HAUTEUR - MARGE
 
     elements = []
 
@@ -324,7 +416,7 @@ def generer_svg(titres, nb_mots=50):
             y = random.randint(h_mot + MARGE, HAUTEUR - MARGE)
 
             if not chevauche(x, y, w_mot, h_mot) and not hors_cadre(x, y, w_mot, h_mot):
-                boites.append((x - w_mot/2, y - h_mot, x + w_mot/2, y))
+                boites.append((x - w_mot / 2, y - h_mot, x + w_mot / 2, y))
                 elements.append(
                     f'<text x="{x}" y="{y}" font-size="{px}" fill="{couleur}" '
                     f'font-family="Arial, sans-serif" text-anchor="middle">{mot}</text>'
@@ -398,26 +490,36 @@ def liste_subscriptions():
 
 @app.route("/subscriptions/add", methods=["POST"])
 def ajouter_subscription():
-    source_name      = request.form.get("source_name", "").strip()
-    sitemap_url      = request.form.get("sitemap_url", "").strip()
+    source_name = request.form.get("source_name", "").strip()
+    sitemap_url = request.form.get("sitemap_url", "").strip()
     refresh_interval = request.form.get("refresh_interval_minutes", "60").strip()
 
     if not source_name or not sitemap_url:
         liste = list(subscriptions.find().sort("source_name", 1))
-        return render_template("subscriptions.html", subscriptions=liste,
-                               erreur="Le nom de la source et l'URL du sitemap sont obligatoires.", resume=None)
+        return render_template(
+            "subscriptions.html",
+            subscriptions=liste,
+            erreur="Le nom de la source et l'URL du sitemap sont obligatoires.",
+            resume=None
+        )
+
     try:
         subscriptions.insert_one({
-            "source_name":              source_name,
-            "sitemap_url":              sitemap_url,
-            "active":                   True,
+            "source_name": source_name,
+            "sitemap_url": sitemap_url,
+            "active": True,
             "refresh_interval_minutes": int(refresh_interval) if refresh_interval.isdigit() else 60,
-            "last_fetch_at":            None,
+            "last_fetch_at": None,
         })
     except DuplicateKeyError:
         liste = list(subscriptions.find().sort("source_name", 1))
-        return render_template("subscriptions.html", subscriptions=liste,
-                               erreur=f"Cet abonnement existe déjà : {sitemap_url}", resume=None)
+        return render_template(
+            "subscriptions.html",
+            subscriptions=liste,
+            erreur=f"Cet abonnement existe déjà : {sitemap_url}",
+            resume=None
+        )
+
     synchroniser_jobs()
     return redirect("/subscriptions")
 
@@ -428,6 +530,7 @@ def supprimer_subscription(id):
         oid = ObjectId(id)
     except InvalidId:
         abort(404)
+
     subscriptions.delete_one({"_id": oid})
     synchroniser_jobs()
     return redirect("/subscriptions")
@@ -439,9 +542,11 @@ def basculer_subscription(id):
         oid = ObjectId(id)
     except InvalidId:
         abort(404)
+
     sub = subscriptions.find_one({"_id": oid})
     if sub is None:
         abort(404)
+
     subscriptions.update_one({"_id": oid}, {"$set": {"active": not sub.get("active", True)}})
     synchroniser_jobs()
     return redirect("/subscriptions")
@@ -453,12 +558,21 @@ def modifier_intervalle(id):
         oid = ObjectId(id)
     except InvalidId:
         abort(404)
+
     nouvel_intervalle = request.form.get("refresh_interval_minutes", "").strip()
     if not nouvel_intervalle.isdigit() or int(nouvel_intervalle) < 1:
         liste = list(subscriptions.find().sort("source_name", 1))
-        return render_template("subscriptions.html", subscriptions=liste,
-                               erreur="L'intervalle doit être un entier positif (en minutes).", resume=None)
-    subscriptions.update_one({"_id": oid}, {"$set": {"refresh_interval_minutes": int(nouvel_intervalle)}})
+        return render_template(
+            "subscriptions.html",
+            subscriptions=liste,
+            erreur="L'intervalle doit être un entier positif (en minutes).",
+            resume=None
+        )
+
+    subscriptions.update_one(
+        {"_id": oid},
+        {"$set": {"refresh_interval_minutes": int(nouvel_intervalle)}}
+    )
     synchroniser_jobs()
     return redirect("/subscriptions")
 
@@ -466,9 +580,8 @@ def modifier_intervalle(id):
 @app.route("/subscriptions/update", methods=["POST"])
 def mettre_a_jour():
     resume = mettre_a_jour_tous_les_abonnements()
-    liste  = list(subscriptions.find().sort("source_name", 1))
+    liste = list(subscriptions.find().sort("source_name", 1))
     return render_template("subscriptions.html", subscriptions=liste, erreur=None, resume=resume)
-
 
 # Lancement
 

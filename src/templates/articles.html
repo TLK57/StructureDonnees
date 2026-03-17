@@ -14,8 +14,6 @@
             --text:    #e6edf3;
             --muted:   #8b949e;
             --accent:  #58a6ff;
-            --green:   #3fb950;
-            --red:     #f78166;
         }
 
         body {
@@ -30,7 +28,8 @@
         }
 
         header {
-            width: 100%; max-width: 820px;
+            width: 100%;
+            max-width: 960px;
             padding: 2.5rem 0 1.5rem;
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -53,22 +52,30 @@
             color: var(--muted);
             text-decoration: none;
         }
-        .back:hover { color: var(--accent); }
+
+        .back:hover {
+            color: var(--accent);
+        }
 
         .search-form {
-            width: 100%; max-width: 820px;
+            width: 100%;
+            max-width: 960px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 1.4rem 1.6rem;
             margin-top: 1.5rem;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
             animation: fadeUp .4s .1s ease both;
         }
 
-        .field { display: flex; flex-direction: column; gap: .4rem; }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
 
         label {
             font-family: "Courier New", monospace;
@@ -78,23 +85,30 @@
             color: var(--muted);
         }
 
-        input[type="text"] {
+        input[type="text"],
+        input[type="date"],
+        select {
             background: var(--bg);
             border: 1px solid var(--border);
             border-radius: 4px;
             color: var(--text);
-            padding: .5rem .7rem;
+            padding: .6rem .75rem;
             font-size: .9rem;
             font-family: "Georgia", serif;
             outline: none;
             transition: border-color .2s;
         }
-        input[type="text"]:focus { border-color: var(--accent); }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+        }
 
         .form-actions {
             display: flex;
             align-items: flex-end;
             gap: .7rem;
+            flex-wrap: wrap;
         }
 
         .btn-search {
@@ -102,13 +116,16 @@
             color: #0d1117;
             border: none;
             border-radius: 4px;
-            padding: .5rem 1.1rem;
+            padding: .6rem 1.1rem;
             font-size: .85rem;
             font-family: "Courier New", monospace;
             cursor: pointer;
             white-space: nowrap;
         }
-        .btn-search:hover { background: #79b8ff; }
+
+        .btn-search:hover {
+            background: #79b8ff;
+        }
 
         .btn-reset {
             color: var(--muted);
@@ -116,10 +133,14 @@
             font-size: .8rem;
             white-space: nowrap;
         }
-        .btn-reset:hover { color: var(--text); }
+
+        .btn-reset:hover {
+            color: var(--text);
+        }
 
         .count {
-            width: 100%; max-width: 820px;
+            width: 100%;
+            max-width: 960px;
             margin-top: 1.5rem;
             font-family: "Courier New", monospace;
             font-size: .72rem;
@@ -129,7 +150,8 @@
         }
 
         .list {
-            width: 100%; max-width: 820px;
+            width: 100%;
+            max-width: 960px;
             margin-top: .8rem;
             list-style: none;
         }
@@ -138,22 +160,39 @@
             border-bottom: 1px solid var(--border);
             padding: 1rem 0;
             display: grid;
-            grid-template-columns: 1.6rem 1fr;
-            gap: .3rem 1rem;
+            grid-template-columns: 120px 1fr;
+            gap: 1rem;
             animation: fadeUp .35s ease both;
         }
 
-        .item:nth-child(n) { animation-delay: calc(n * .04s); }
-
-        .num {
-            color: var(--border);
-            font-family: "Courier New", monospace;
-            font-size: .7rem;
-            padding-top: .3rem;
-            text-align: right;
+        .thumb {
+            width: 120px;
+            height: 80px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: #0f141b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: .75rem;
+            text-align: center;
+            padding: .5rem;
         }
 
-        .item-body { display: flex; flex-direction: column; gap: .3rem; }
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .item-body {
+            display: flex;
+            flex-direction: column;
+            gap: .35rem;
+        }
 
         .item-title a {
             color: var(--text);
@@ -161,7 +200,10 @@
             font-size: 1rem;
             line-height: 1.4;
         }
-        .item-title a:hover { color: var(--accent); }
+
+        .item-title a:hover {
+            color: var(--accent);
+        }
 
         .item-meta {
             font-family: "Courier New", monospace;
@@ -170,15 +212,34 @@
         }
 
         .empty {
-            width: 100%; max-width: 820px;
+            width: 100%;
+            max-width: 960px;
             margin-top: 3rem;
             text-align: center;
             color: var(--muted);
             font-style: italic;
         }
 
-        @keyframes fadeDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeUp   { from { opacity:0; transform:translateY(8px);   } to { opacity:1; transform:translateY(0); } }
+        @media (max-width: 640px) {
+            .item {
+                grid-template-columns: 1fr;
+            }
+
+            .thumb {
+                width: 100%;
+                height: 180px;
+            }
+        }
+
+        @keyframes fadeDown {
+            from { opacity:0; transform:translateY(-10px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(8px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -190,17 +251,46 @@
 
 <form class="search-form" method="GET" action="/articles">
     <div class="field">
-        <label>Source</label>
-        <input type="text" name="source_name" value="{{ source }}" placeholder="ex : Le Monde" />
+        <label for="source_name">Source</label>
+        <select id="source_name" name="source_name">
+            <option value="">Toutes les sources</option>
+            {% for s in sources %}
+            <option value="{{ s }}" {% if s == source %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+        </select>
     </div>
+
     <div class="field">
-        <label>Mot dans le titre</label>
-        <input type="text" name="keyword" value="{{ keyword }}" placeholder="ex : climat" />
+        <label for="keyword">Mot dans le titre</label>
+        <input
+                type="text"
+                id="keyword"
+                name="keyword"
+                value="{{ keyword }}"
+                placeholder="ex : climat"
+        />
     </div>
+
     <div class="field">
-        <label>Date</label>
-        <input type="text" name="publication_date" value="{{ date }}" placeholder="ex : 2026-03-10" />
+        <label for="date_debut">Date début</label>
+        <input
+                type="date"
+                id="date_debut"
+                name="date_debut"
+                value="{{ date_debut }}"
+        />
     </div>
+
+    <div class="field">
+        <label for="date_fin">Date fin</label>
+        <input
+                type="date"
+                id="date_fin"
+                name="date_fin"
+                value="{{ date_fin }}"
+        />
+    </div>
+
     <div class="form-actions">
         <button class="btn-search" type="submit">Rechercher</button>
         <a class="btn-reset" href="/articles">Réinitialiser</a>
@@ -209,17 +299,29 @@
 
 {% if articles %}
 <p class="count">{{ articles|length }} article(s) trouvé(s)</p>
+
 <ul class="list">
     {% for article in articles %}
     <li class="item">
-        <span class="num">{{ loop.index }}</span>
+        <div class="thumb">
+            {% if article.image_url %}
+            <img src="{{ article.image_url }}" alt="Image de l’article">
+            {% else %}
+            <span>Pas d’image</span>
+            {% endif %}
+        </div>
+
         <div class="item-body">
             <div class="item-title">
-                <a href="/article/{{ article._id }}/open" target="_blank">{{ article.title }}</a>
+                <a href="/article/{{ article._id }}/open" target="_blank">
+                    {{ article.title }}
+                </a>
             </div>
+
             <div class="item-meta">
                 {{ article.publication_date | format_date }}
-                &nbsp;·&nbsp; {{ article.source_name }}
+                &nbsp;·&nbsp;
+                {{ article.source_name }}
             </div>
         </div>
     </li>
