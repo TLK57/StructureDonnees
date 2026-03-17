@@ -146,6 +146,7 @@ def recuperer_image_article(url):
 
     return None
 
+
 def inserer_articles(liste, subscription_id, source_name):
     """
     Insère les articles dans MongoDB.
@@ -190,6 +191,7 @@ def inserer_articles(liste, subscription_id, source_name):
                 )
 
     return nb_inseres, nb_doublons
+
 
 def mettre_a_jour_un_abonnement(subscription_id_str):
     """Met à jour un seul abonnement. Appelé par chaque job APScheduler."""
@@ -302,9 +304,17 @@ def liste_articles():
     keyword = request.args.get("keyword", "").strip()
     date_debut = request.args.get("date_debut", "").strip()
     date_fin = request.args.get("date_fin", "").strip()
+    nb_articles = request.args.get("nb_articles", "20").strip()
 
     filtre = {}
     erreur = None
+
+    try:
+        nb_articles = int(nb_articles)
+        if nb_articles < 1:
+            nb_articles = 20
+    except ValueError:
+        nb_articles = 20
 
     if source:
         filtre["source_name"] = source
@@ -337,7 +347,11 @@ def liste_articles():
     if erreur:
         resultats = []
     else:
-        resultats = list(articles.find(filtre).sort("publication_date", -1).limit(20))
+        resultats = list(
+            articles.find(filtre)
+            .sort("publication_date", -1)
+            .limit(nb_articles)
+        )
 
     sources = sorted([s for s in articles.distinct("source_name") if s])
 
@@ -349,6 +363,7 @@ def liste_articles():
         keyword=keyword,
         date_debut=date_debut,
         date_fin=date_fin,
+        nb_articles=nb_articles,
         erreur=erreur
     )
 

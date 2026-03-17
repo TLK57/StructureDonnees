@@ -14,6 +14,9 @@
             --text:    #e6edf3;
             --muted:   #8b949e;
             --accent:  #58a6ff;
+            --warning-bg: rgba(247, 129, 102, 0.12);
+            --warning-border: rgba(247, 129, 102, 0.45);
+            --warning-text: #f78166;
         }
 
         body {
@@ -136,6 +139,18 @@
 
         .btn-reset:hover {
             color: var(--text);
+        }
+
+        .error-box {
+            width: 100%;
+            max-width: 960px;
+            margin-top: 1rem;
+            padding: .9rem 1rem;
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: 6px;
+            color: var(--warning-text);
+            font-size: .92rem;
         }
 
         .count {
@@ -291,11 +306,28 @@
         />
     </div>
 
+    <div class="field">
+        <label for="nb_articles">Nombre d’articles</label>
+        <select id="nb_articles" name="nb_articles">
+            <option value="10" {% if nb_articles == 10 or nb_articles == "10" %}selected{% endif %}>10</option>
+            <option value="20" {% if nb_articles == 20 or nb_articles == "20" %}selected{% endif %}>20</option>
+            <option value="30" {% if nb_articles == 30 or nb_articles == "30" %}selected{% endif %}>30</option>
+            <option value="50" {% if nb_articles == 50 or nb_articles == "50" %}selected{% endif %}>50</option>
+            <option value="100" {% if nb_articles == 100 or nb_articles == "100" %}selected{% endif %}>100</option>
+        </select>
+    </div>
+
     <div class="form-actions">
         <button class="btn-search" type="submit">Rechercher</button>
         <a class="btn-reset" href="/articles">Réinitialiser</a>
     </div>
 </form>
+
+{% if erreur %}
+<div class="error-box">
+    {{ erreur }}
+</div>
+{% endif %}
 
 {% if articles %}
 <p class="count">{{ articles|length }} article(s) trouvé(s)</p>
