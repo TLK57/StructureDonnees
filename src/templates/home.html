@@ -68,6 +68,28 @@
             font-style: italic;
         }
 
+        .account-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            margin-top: 1.2rem;
+            padding: .75rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(22, 27, 34, 0.92);
+            color: var(--text);
+            text-decoration: none;
+            font-size: .9rem;
+        }
+
+        .account-link span {
+            color: var(--accent);
+            font-family: "Courier New", monospace;
+            font-size: .76rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
         .section-title {
             width: 100%;
             max-width: 860px;
@@ -110,6 +132,7 @@
         .card:nth-child(1) { animation-delay: .15s; }
         .card:nth-child(2) { animation-delay: .25s; }
         .card:nth-child(3) { animation-delay: .35s; }
+        .card:nth-child(4) { animation-delay: .45s; }
 
         .card-icon {
             font-size: 1.5rem;
@@ -132,6 +155,7 @@
         .card:nth-child(1) .card-title { color: var(--accent);  }
         .card:nth-child(2) .card-title { color: var(--accent2); }
         .card:nth-child(3) .card-title { color: var(--accent3); }
+        .card:nth-child(4) .card-title { color: var(--accent4); }
 
         /* ── Features ── */
         .features {
@@ -201,6 +225,11 @@
         Agrégation, stockage et exploration d'articles de presse
         à partir de sitemaps XML — alimenté par Python, Flask et MongoDB.
     </p>
+    {% if current_user %}
+    <a class="account-link" href="/profile"><span>Connecté</span>{{ current_user.username }} · Voir le profil</a>
+    {% else %}
+    <a class="account-link" href="/login"><span>Compte</span>Se connecter pour accéder au profil et à l'historique</a>
+    {% endif %}
 </header>
 
 <p class="section-title">Accès rapide</p>
@@ -227,6 +256,18 @@
         <div class="card-title">Nuage de mots</div>
         <div class="card-desc">
             Visualiser les mots les plus fréquents dans les titres des articles sous forme de nuage SVG.
+        </div>
+    </a>
+
+    <a class="card" href="{% if current_user %}/profile{% else %}/login{% endif %}">
+        <div class="card-icon">👤</div>
+        <div class="card-title">{% if current_user %}Profil{% else %}Connexion{% endif %}</div>
+        <div class="card-desc">
+            {% if current_user %}
+            Retrouver ton espace personnel et ton historique de consultation.
+            {% else %}
+            Créer un compte ou te connecter pour consulter ton historique personnel.
+            {% endif %}
         </div>
     </a>
 

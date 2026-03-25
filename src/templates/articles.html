@@ -36,7 +36,7 @@
             padding: 2.5rem 0 1.5rem;
             border-bottom: 1px solid var(--border);
             display: flex;
-            align-items: baseline;
+            align-items: center;
             gap: 1.2rem;
             animation: fadeDown .4s ease both;
         }
@@ -48,16 +48,26 @@
         }
 
         .back {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            padding: .65rem 1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(88, 166, 255, 0.35);
+            background: rgba(88, 166, 255, 0.12);
             font-family: "Courier New", monospace;
-            font-size: .72rem;
-            letter-spacing: .12em;
+            font-size: .74rem;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: var(--text);
             text-decoration: none;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
         }
 
         .back:hover {
-            color: var(--accent);
+            color: #ffffff;
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.7);
         }
 
         .search-form {
@@ -90,6 +100,7 @@
 
         input[type="text"],
         input[type="date"],
+        input[type="datetime-local"],
         select {
             background: var(--bg);
             border: 1px solid var(--border);
@@ -112,6 +123,41 @@
             align-items: flex-end;
             gap: .7rem;
             flex-wrap: wrap;
+        }
+
+        .advanced-filters {
+            grid-column: 1 / -1;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            padding: .9rem 1rem 1rem;
+        }
+
+        .advanced-summary {
+            cursor: pointer;
+            font-family: "Courier New", monospace;
+            font-size: .74rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            list-style: none;
+        }
+
+        .advanced-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .advanced-note {
+            margin-top: .6rem;
+            margin-bottom: .9rem;
+            color: var(--muted);
+            font-size: .82rem;
+            line-height: 1.5;
+        }
+
+        .advanced-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
         }
 
         .btn-search {
@@ -261,7 +307,7 @@
 
 <header>
     <h1>Articles</h1>
-    <a class="back" href="/">← Accueil</a>
+    <a class="back" href="/">← Retour à l'accueil</a>
 </header>
 
 <form class="search-form" method="GET" action="/articles">
@@ -287,6 +333,16 @@
     </div>
 
     <div class="field">
+        <label for="category">Catégorie</label>
+        <select id="category" name="category">
+            <option value="">Toutes les catégories</option>
+            {% for value, label in categories %}
+            <option value="{{ value }}" {% if value == category %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="field">
         <label for="date_debut">Date début</label>
         <input
                 type="date"
@@ -305,6 +361,34 @@
                 value="{{ date_fin }}"
         />
     </div>
+
+    <details class="advanced-filters" {% if consulted_after or consulted_before %}open{% endif %}>
+        <summary class="advanced-summary">Filtres avancés de consultation</summary>
+        <p class="advanced-note">
+            Sert uniquement à retrouver les articles que tu as déjà ouverts dans une période précise.
+        </p>
+        <div class="advanced-grid">
+            <div class="field">
+                <label for="consulted_after">Consulté après</label>
+                <input
+                        type="datetime-local"
+                        id="consulted_after"
+                        name="consulted_after"
+                        value="{{ consulted_after }}"
+                />
+            </div>
+
+            <div class="field">
+                <label for="consulted_before">Consulté avant</label>
+                <input
+                        type="datetime-local"
+                        id="consulted_before"
+                        name="consulted_before"
+                        value="{{ consulted_before }}"
+                />
+            </div>
+        </div>
+    </details>
 
     <div class="field">
         <label for="nb_articles">Nombre d’articles</label>

@@ -34,7 +34,7 @@
       padding: 2.5rem 0 1.5rem;
       border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 1.2rem;
       animation: fadeDown .4s ease both;
     }
@@ -46,15 +46,27 @@
     }
 
     .back {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .65rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(88, 166, 255, 0.35);
+      background: rgba(88, 166, 255, 0.12);
       font-family: "Courier New", monospace;
-      font-size: .72rem;
-      letter-spacing: .12em;
+      font-size: .74rem;
+      letter-spacing: .1em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--text);
       text-decoration: none;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
     }
 
-    .back:hover { color: var(--accent); }
+    .back:hover {
+      color: #ffffff;
+      background: rgba(88, 166, 255, 0.2);
+      border-color: rgba(88, 166, 255, 0.7);
+    }
 
     .subtitle {
       width: 100%;
@@ -131,6 +143,17 @@
       opacity: .9;
     }
 
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1rem;
+      text-decoration: none;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
     .cloud-wrap {
       width: 100%;
       max-width: 960px;
@@ -148,6 +171,15 @@
       width: 100%;
       height: auto;
       border-radius: 4px;
+    }
+
+    .cloud-note {
+      width: 100%;
+      max-width: 960px;
+      margin-top: .9rem;
+      color: var(--muted);
+      font-size: .85rem;
+      text-align: center;
     }
 
     .empty {
@@ -185,7 +217,7 @@
 
 <header>
   <h1>Nuage de mots</h1>
-  <a class="back" href="/">← Accueil</a>
+  <a class="back" href="/">← Retour à l'accueil</a>
 </header>
 
 <p class="subtitle">
@@ -239,6 +271,13 @@
 <div class="cloud-wrap">
   {{ svg | safe }}
 </div>
+<p class="cloud-note">Les mots trop génériques sont filtrés automatiquement. Survole un mot pour le mettre en avant, puis clique dessus pour ouvrir un article lié.</p>
+<a
+  class="btn btn-secondary"
+  href="/wordcloud/download?date_debut={{ request.args.get('date_debut', '') }}&date_fin={{ request.args.get('date_fin', '') }}&nb_mots={{ request.args.get('nb_mots', '30') }}"
+>
+  Télécharger le SVG
+</a>
 {% else %}
 <p class="empty">Aucun article trouvé pour les critères sélectionnés.</p>
 {% endif %}
