@@ -62,9 +62,43 @@ def ensure_collection_compatibility():
     migrate_legacy_collection("users", users)
 
 
+def remove_duplicate_articles():
+    """Supprime les articles en doublon, conservant le premier de chaque URL."""
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$url",
+                "first_id": {"$first": "$_id"},
+                "count": {"$sum": 1}
+            }
+        },
+        {
+            "$match": {"count": {"$gt": 1}}
+        }
+    ]
+    
+    duplicates = list(articles.aggregate(pipeline))
+    
+    if not duplicates:
+        return
+    
+    deleted_count = 0
+    for dup in duplicates:
+        # Supprimer tous les doublons sauf le premier (_id)
+        result = articles.delete_many({
+            "url": articles.find_one({"_id": dup["first_id"]})["url"],
+            "_id": {"$ne": dup["first_id"]}
+        })
+        deleted_count += result.deleted_count
+    
+    if deleted_count > 0:
+        print(f"⚠️ {deleted_count} article(s) en doublon supprimé(s)")
+
+
 def ensure_indexes():
     try:
         ensure_collection_compatibility()
+        remove_duplicate_articles()
         subscriptions.create_indexes(
             [
                 IndexModel([("sitemap_url", ASCENDING)], unique=True, name="subscriptions_sitemap_url_unique"),
